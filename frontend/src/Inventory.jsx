@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import PocketBase from 'pocketbase';
-import Table from './Tables';
+
 
 const Inventory = () => {
 

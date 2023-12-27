@@ -1,7 +1,7 @@
 
 import './App.css'
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
-import Inventory from "./pages/inventory/Inventory";
+import Inventory from "./Inventory"
 import Sales from './pages/sales/Sales';
 import Home from './pages/Home/Home';
 
