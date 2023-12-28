@@ -10,3 +10,4 @@ Currently, two official plugins are available:
 testing
 
 git remote rm origin
+https://github.com/yube01/InventorySMS.git
