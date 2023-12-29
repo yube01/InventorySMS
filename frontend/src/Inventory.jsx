@@ -1,58 +1,89 @@
 import React, { useEffect, useState } from 'react'
 import PocketBase from 'pocketbase';
-import { Link, json } from 'react-router-dom';
+
 import NepaliDatepicker from 'nepali-datepicker-and-dateinput';
+
 
 
 const Inventory = () => {
 
     const pb = new PocketBase('https://draw-wire.pockethost.io');
 
-    const [piece,setPiece] = useState('');
-    const [type,setType] = useState("h3jn9e18t918jjw");
-    // const [size,setSize] = useState("Big")
+
+    const [type,setType] = useState('');
+   
     const [quantity,setQuantity] = useState('')
     const [value,setValue] = useState([])
-    const [up,setUp] = useState(false)
+
     const [date,setDate] = useState('')
     const [prev,setPrev] = useState(0)
 
-    const handleDateChange = (name, dateInMilli, bsDate, adDate) => {
-        console.log(name); // Prints the field name of date input
-        console.log(dateInMilli); // Prints the equivalent date millisecond
-        setDate(bsDate); // Prints the bsDate
-        console.log(adDate); // Prints the equivalent adDate
-      }
-
-
-    const getData = async()=>{
-        const record = await pb.collection('product').getOne(type, {
-            expand: 'relField1,relField2.subRelField'})
-        // setValue(record)
-        setPrev(record.availablePieces)
+    const viewData = async()=>{
+       try {
+        pb.autoCancellation(false)
+        const records = await pb.collection('product').getFullList({
+            sort: '-created'})
+        if(records){
+            setValue(records)
+        }
+       } catch (error) {
+        console.log(error)
+        
+       }
+        
     }
+
+   
 
     useEffect(()=>{
         
        
-        getData()
+        viewData()
 
     },[])
-    
-    const handleDelete = async(id)=>{
-      
-        await pb.collection('inventory').delete(id);
-        getData()
+
+    const getData = async(type)=>{
+        
+        
+        try {
+            const record = await pb.collection('product').getOne(type, {
+                expand: 'relField1,relField2.subRelField'})
+            
+               
+                if(record){
+                    setPrev(record.availablePieces)
+                    
+                }
+
+            
+           
+        } catch (error) {
+            console.log(error)
+        }
         
 
+        
     }
-    let total = 0
+
+   
+    
+
+    const handleDateChange = (name, dateInMilli, bsDate, adDate) => {
+       
+        
+        setDate(bsDate); 
+        
+ }
+   
+    
+
+  
+
 
     const handleAdd = async(e)=>{
+      
+    
         e.preventDefault();
-
-        
-
         try {
             const data = {
                 "productionDate": date,
@@ -63,18 +94,24 @@ const Inventory = () => {
             };
             
             const record = await pb.collection('production').create(data);
-            console.log(record)
+           
+            
+           
+            
+     
             if(record){
+              
+                let total = Number(quantity) + Number(prev)
                 
-                total = Number(quantity) + Number(prev)
-                console.log(total)
                 const data = {
                     
                     "availablePieces": total
                 };
                 const records = await pb.collection('product').update(type, data);
                 console.log(records)
+                viewData()
             }
+        
            
             
         } catch (error) {
@@ -82,10 +119,9 @@ const Inventory = () => {
             
         }
     }
-    const handleOpen = ()=>{
-        setUp(true)
-    }
-    
+
+
+
 
   return (
     <div className='flex gap-10 relative'>
@@ -108,11 +144,12 @@ const Inventory = () => {
 
             <div className=' flex gap-4'>
             <label>Type</label>
-            <select name="" id="" value={type} onChange={(e) => setType(e.target.value)}>
+            <select name="" id="" value={type} onChange={(e) => {setType(e.target.value);getData(e.target.value)}}>
+                <option value="">Select the option</option>
                 <option value="h3jn9e18t918jjw">Chi Momo</option>
-                <option value="Veg">Veg Momo</option>
-                <option value="Pork">Pork Momo</option>
-                <option value="Buff">Buff Momo</option>
+                <option value="roivwboyvm2pfje">Veg Momo</option>
+                <option value="zf8j99zl4ft79lf">Pork Momo</option>
+                <option value="305fxlc0m9o76p1">Buff Momo</option>
             </select>
            
             </div>
@@ -131,13 +168,10 @@ const Inventory = () => {
                     <thead>
                     <tr className=' p-5'>
                       
-                        <th>Momo perPiece</th>
-                        <th>Type</th>
-                        <th>Size</th>
-                        <th>Quantity</th>
+                        <th>Product Name</th>
+                        <th>Available Pieces</th>
                         <th className=' p-5'>Date</th>
-                        <th>Update</th>
-                        <th>Delete</th>
+                        
 
                     </tr>
                     </thead>
@@ -146,17 +180,11 @@ const Inventory = () => {
                             value.map((v)=>(
                                 <tr className=' p-5' key={v.id}>
                                
-                                                             <th>{v.Momo_perPiece}</th>
-                                                             <th>{v.Type}</th>
-                                                             <th>{v.Size}</th>
-                                                             <th>{v.Quantity}</th>
+                                                             <th>{v.productName}</th>
+                                                             <th>{v.availablePieces}</th>
+                                                             
                                                              <th>{v.created}</th>
-                                                             <th className=' cursor-pointer'>
-                                                                <Link to={`/update/${v.id}`}>
-                                                                    Update
-                                                                </Link>
-                                                             </th>
-                                                             <th className=' cursor-pointer' onClick={()=>handleDelete(v.id)}>Delete</th>
+                                                            
                                 </tr>
                             ))
 
@@ -167,39 +195,7 @@ const Inventory = () => {
                 </table>
             </div>
        </div>
-       {
-        up && (
-            <form onSubmit={()=>{}} className=' flex gap-10 h-max flex-col
-             absolute left-[30%] w-[30rem]
-              bg-cyan-950 p-5'>
-                <h1>Update</h1>
-            <div className='flex flex-col'>
-            <label>Momo Input (per piece)</label>
-            <input type="number" value={piece} onChange={(e) => setPiece(e.target.value)}/>
-            </div>
-
-            <div className=' flex gap-4'>
-            <label>Type</label>
-            <select name="" id="" value={type} onChange={(e) => setType(e.target.value)}>
-                <option value="Chicken">Chi Momo</option>
-                <option value="Veg">Veg Momo</option>
-                <option value="Pork">Pork Momo</option>
-                <option value="Buff">Buff Momo</option>
-            </select>
-            <select name="" id="" value={size} onChange={(e) => setSize(e.target.value)}>
-            <option value="Big">Big</option>
-            <option value="Small">Small</option>
-            </select>
-            </div>
-
-            <div className='flex flex-col'>
-            <label>Quantity</label>
-            <input type="number" value={quantity} onChange={(e) => setQuantity(e.target.value)} />
-            </div>
-            <input type="submit" value="Add"  />
-        </form>
-        )
-       }
+      
     </div>
   )
 }
