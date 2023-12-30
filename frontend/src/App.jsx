@@ -6,6 +6,7 @@ import Inventory from "./Inventory"
 import Home from './pages/Home';
 import Update from './components/Update';
 import Sales from './pages/Sales';
+import Order from './pages/Order';
 
 function App() {
   const router = createBrowserRouter([
@@ -23,6 +24,9 @@ function App() {
     },{
       path:"/sales",
       element:<Sales/>
+    },{
+      path:"/order",
+      element:<Order/>
     }
   ]);
 

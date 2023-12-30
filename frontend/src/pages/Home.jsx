@@ -17,6 +17,9 @@ const Home = () => {
         <Link to="/sales">
             Sales
         </Link>
+        <Link to="/order">
+            Place an order
+        </Link>
         </div>
     </div>
   )
