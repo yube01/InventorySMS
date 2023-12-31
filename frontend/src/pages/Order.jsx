@@ -62,12 +62,8 @@ const Order = () => {
         console.log(total)
         try {
             const data = {
-                "orderId": [
-                    order
-                ],
-                "productId": [
-                    type
-                ],
+                "orderId":order,
+                "productId":type,
                 "quantity": quantity,
                 "price": price,
                 "amount": total
