@@ -7,6 +7,7 @@ import Home from './pages/Home';
 import Update from './components/Update';
 import Sales from './pages/Sales';
 import Order from './pages/Order';
+import Customer from './pages/Customer';
 
 function App() {
   const router = createBrowserRouter([
@@ -27,6 +28,9 @@ function App() {
     },{
       path:"/order",
       element:<Order/>
+    },{
+      path:"/customer",
+      element:<Customer/>
     }
   ]);
 

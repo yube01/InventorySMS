@@ -20,6 +20,9 @@ const Home = () => {
         <Link to="/order">
             Place an order
         </Link>
+        <Link to="/customer">
+            Add Customer
+        </Link>
         </div>
     </div>
   )

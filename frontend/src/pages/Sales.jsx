@@ -56,6 +56,17 @@ const Sales = () => {
         "305fxlc0m9o76p1": "Buff Momo"
       };
 
+      const getProductData = async()=>{
+        try {
+            const records = await pb.collection('product').getFullList({
+                sort: '-created',
+            });
+            console.log(records)
+        } catch (error) {
+            console.log(error)
+        }
+      }
+
       const handleSales = async(e)=>{
         e.preventDefault()
 
