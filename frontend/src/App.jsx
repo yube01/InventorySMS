@@ -1,13 +1,13 @@
 
 import './App.css'
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
-import Inventory from "./Inventory"
 
 import Home from './pages/Home';
 import Update from './components/Update';
 import Sales from './pages/Sales';
 import Order from './pages/Order';
 import Customer from './pages/Customer';
+import Inventory from './pages/Inventory';
 
 function App() {
   const router = createBrowserRouter([

@@ -17,20 +17,44 @@ const Inventory = () => {
 
     const [date,setDate] = useState('')
     const [prev,setPrev] = useState(0)
+    
 
+    const[prod,setProd] =useState([])
+    const[pvalue,setPvalue] = useState([])
     const viewData = async()=>{
+        const momoMapping = {};
        try {
         pb.autoCancellation(false)
         const records = await pb.collection('product').getFullList({
             sort: '-created'})
-        if(records){
+        
+            records.forEach(record => {
+                const { id, productName } = record;
+                momoMapping[id] = productName;
+                setPvalue(momoMapping)
+            });
+        
+                 
             setValue(records)
-        }
+        
        } catch (error) {
         console.log(error)
         
        }
         
+    }
+
+
+    const viewProduction = async()=>{
+        try {
+            const records = await pb.collection('production').getFullList({
+                sort: '-created',
+            });
+            setProd(records)
+
+        } catch (error) {
+            console.log(error)
+        }
     }
 
    
@@ -39,6 +63,7 @@ const Inventory = () => {
         
        
         viewData()
+        viewProduction()
 
     },[])
 
@@ -110,6 +135,7 @@ const Inventory = () => {
                 const records = await pb.collection('product').update(type, data);
                 console.log(records)
                 viewData()
+                viewProduction()
             }
         
            
@@ -124,7 +150,8 @@ const Inventory = () => {
 
 
   return (
-    <div className='flex gap-10 relative'>
+    <div className='flex gap-10 flex-col relative bg-cyan-300'>
+       <div className=' flex gap-x-10'>
        <div>
        <h1 className=' mb-4'>Inventory Input</h1>
         <form onSubmit={handleAdd} className=' flex gap-5 flex-col'>
@@ -146,10 +173,11 @@ const Inventory = () => {
             <label>Type</label>
             <select name="" id="" value={type} onChange={(e) => {setType(e.target.value);getData(e.target.value)}}>
                 <option value="">Select the option</option>
-                <option value="h3jn9e18t918jjw">Chi Momo</option>
-                <option value="roivwboyvm2pfje">Veg Momo</option>
-                <option value="zf8j99zl4ft79lf">Pork Momo</option>
-                <option value="305fxlc0m9o76p1">Buff Momo</option>
+                {
+                    value.map((v)=>(
+                    <option value={v.id} key={v.id}>{v.productName}</option>
+                )) }
+               
             </select>
            
             </div>
@@ -184,6 +212,42 @@ const Inventory = () => {
                                                              <th>{v.availablePieces}</th>
                                                              
                                                              <th>{v.created}</th>
+                                                            
+                                </tr>
+                            ))
+
+                        }
+
+                    </tbody>
+
+                </table>
+            </div>
+       </div>
+       </div>
+
+       <div>
+            <h1>Production Log</h1>
+            <div>
+                <table border={1}>
+                    <thead>
+                    <tr className=' p-5'>
+                      
+                        <th>Product Name</th>
+                        <th>Quantity</th>
+                        <th className=' p-5'>Production Date</th>
+                        
+
+                    </tr>
+                    </thead>
+                    <tbody className=' p-5'>
+                        {
+                            prod.map((m)=>(
+                                <tr className=' p-5' key={m.id}>
+                               
+                                                             <th>{pvalue[m.productId]}</th>
+                                                             <th>{m.quantity}</th>
+                                                             
+                                                             <th>{m.productionDate}</th>
                                                             
                                 </tr>
                             ))

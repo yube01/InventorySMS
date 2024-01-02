@@ -14,6 +14,12 @@ const Order = () => {
     const[quantity,setQuantity] = useState('')
     const [price,setPrice] = useState('')
     const[value,setValue] = useState([])
+
+    const[pvalue,setPvalue] = useState([])
+
+    const[idMap,setIdMap] = useState([])
+    const[customer,setCustomer] = useState([])
+    const[cid,setCid] = useState("")
    
 
     const handleDateChange = (name, dateInMilli, bsDate, adDate) => {
@@ -30,9 +36,54 @@ const Order = () => {
     });
     setValue(records)
 
+
    }
+
+
+
+
+
+   
+   const viewProductData = async()=>{
+    const momoMapping = {};
+    try {
+   
+     const records = await pb.collection('product').getFullList({
+         sort: '-created'})
+        
+        records.forEach(record => {
+        const { id, productName } = record;
+        momoMapping[id] = productName;
+        setIdMap(momoMapping)
+    });
+
+         setPvalue(records)
+         
+       
+    } catch (error) {
+     console.log(error)
+     
+    }
+     
+ }
+
+ const customerDetail = async()=>{
+    try {
+        const records = await pb.collection('taxableCustomer').getFullList({
+            sort: '-created',
+        });
+        setCustomer(records)
+    } catch (error) {
+        console.log(error)
+    }
+ }
+
+  
+
    useEffect(()=>{
     viewData()
+    viewProductData()
+    customerDetail()
    },[])
 
     const addOrder = async(e)=>{
@@ -41,7 +92,7 @@ const Order = () => {
             const data = {
                 "orderCreationDate": current,
                 "orderStaffId": "23",
-                "customerId": "23",
+                "customerId": cid,
                 "orderDueDate": due,
                 "orderStatus": "pending"
             };
@@ -78,12 +129,7 @@ const Order = () => {
         }
     }
 
-    const realName = {
-        "h3jn9e18t918jjw": "Chi Momo",
-        "roivwboyvm2pfje": "Veg Momo",
-        "zf8j99zl4ft79lf": "Pork Momo",
-        "305fxlc0m9o76p1": "Buff Momo"
-      };
+  
 
 
   return (
@@ -99,7 +145,14 @@ const Order = () => {
                 defaultFormat
                 locale="en"/>
             </div>
-          
+          <label>Select Customer</label>
+          <select name="" id="" value={cid} onChange={(e) => {setCid(e.target.value)}}>
+            <option value="">Select the customer</option>
+            {
+                customer.map((v)=>(
+                    <option value={v.id} key={v.id}>{v.customerName}</option>
+                )) }
+          </select>
             
             <div>
             <label>Order Delivery Date</label>
@@ -123,10 +176,10 @@ const Order = () => {
             <label>Choose Product</label>
             <select name="" id="" value={type} onChange={(e) => setType(e.target.value)}>
                 <option value="">Select the option</option>
-                <option value="h3jn9e18t918jjw">Chi Momo</option>
-                <option value="roivwboyvm2pfje">Veg Momo</option>
-                <option value="zf8j99zl4ft79lf">Pork Momo</option>
-                <option value="305fxlc0m9o76p1">Buff Momo</option>
+                {
+                    pvalue.map((v)=>(
+                    <option value={v.id} key={v.id}>{v.productName}</option>
+                )) }
             </select>
            
             </div>
@@ -157,7 +210,7 @@ const Order = () => {
                         {
                             value.map((v)=>(
                                 <tr className=' p-5' key={v.id}>
-                                    <th>{realName[v.productId]}</th>
+                                    <th>{idMap[v.productId]}</th>
                                     <th>{v.quantity}</th>
                                     <th>{v.price}</th>
                                     <th>{v.amount}</th>
