@@ -15,6 +15,15 @@ const Sales = () => {
     const[ptype,setPtype] = useState("")
     const[received,setReceived] = useState("")
     const[total,setTotal] =useState(0)
+    const[openB,setOpenb] = useState(false)
+
+    //available product detail
+
+    const[pav,setPav] = useState(0)
+    const[vav,setVav] = useState(0)
+    const[bava,setBav] = useState(0)
+    const[cav,setCav] = useState(0)
+
   
     
 
@@ -62,10 +71,20 @@ const Sales = () => {
                 sort: '-created',
             });
             console.log(records)
+
+            setPav(records[2].availablePieces)
+            setVav(records[3].availablePieces)
+            setBav(records[4].availablePieces)
+            setCav(records[5].availablePieces)
+
+         
+
         } catch (error) {
             console.log(error)
         }
       }
+
+      
 
       const handleSales = async(e)=>{
         e.preventDefault()
@@ -83,12 +102,77 @@ const Sales = () => {
             };
             
             const record = await pb.collection('sales').create(data);
+            getProductData()
             console.log(record)
+            setOpenb(true)
             
             
         } catch (error) {
             console.log(error)
         }
+      }
+      const adjustProduct = async(pId,quan)=>{
+        console.log(pId,quan)
+        try {
+            if(pId === "zf8j99zl4ft79lf"){
+              
+                let total = pav - quan
+                console.log(total)
+                
+                
+                const data = {
+                    
+                    "availablePieces": total
+                };
+                const records = await pb.collection('product').update(pId, data);
+                console.log(records)
+                console.log("Pork data adjusted")
+                
+                viewData()
+            }
+            if(pId === "roivwboyvm2pfje"){
+              
+                let total = vav - quan
+                
+                const data = {
+                    
+                    "availablePieces": total
+                };
+                const records = await pb.collection('product').update(pId, data);
+                console.log(records)
+                console.log("Veg Momo data adjusted")
+                viewData()
+            }
+            if(pId === "h3jn9e18t918jjw"){
+              
+                let total = cav - quan
+                
+                const data = {
+                    
+                    "availablePieces": total
+                };
+                const records = await pb.collection('product').update(pId, data);
+                console.log("Chicken Momo data adjusted")
+                console.log(records)
+                viewData()
+            }
+            if(pId === "305fxlc0m9o76p1"){
+              
+                let total = bava - quan
+                
+                const data = {
+                    
+                    "availablePieces": total
+                };
+                const records = await pb.collection('product').update(pId, data);
+                console.log("Buff Momo data adjusted")
+                console.log(records)
+                viewData()
+            }
+        } catch (error) {
+            console.log(error)
+        }
+
       }
 
       
@@ -196,6 +280,25 @@ const Sales = () => {
                         <input type="submit" className=" cursor-pointer border-black border-2 " value="Add"  />
                     </form>
                         </div>
+                    )
+                }
+                {
+                    openB && (
+                        
+                        <div>
+                            <h1>Adjust Quantity</h1>
+                            {
+                            valueItem.map((m)=>(
+                                <div className=' p-5 flex gap-x-4' key={m.id}>
+                                    <p>{realName[m.productId]}</p>
+                                    <p>{m.quantity}</p>
+                                    <p><button onClick={()=>adjustProduct(m.productId,m.quantity)}>Update</button></p>
+                                </div>
+                            ))
+
+                        }
+                        </div>
+                         
                     )
                 }
         
