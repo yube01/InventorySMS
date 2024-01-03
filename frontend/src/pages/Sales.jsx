@@ -15,7 +15,7 @@ const Sales = () => {
     const[ptype,setPtype] = useState("")
     const[received,setReceived] = useState("")
     const[total,setTotal] =useState(0)
-    const[openB,setOpenb] = useState(false)
+
 
     //available product detail
 
@@ -23,6 +23,11 @@ const Sales = () => {
     const[vav,setVav] = useState(0)
     const[bava,setBav] = useState(0)
     const[cav,setCav] = useState(0)
+
+    const [ pvalue,setPvalue] = useState([])
+
+    //order item state
+    const[orderItem,setOrderItem] = useState([])
 
   
     
@@ -36,19 +41,58 @@ const Sales = () => {
         setValue(records)
     
        }
+
+       const getProductData = async()=>{
+        const momoMapping = {};
+        try {
+            const records = await pb.collection('product').getFullList({
+                sort: '-created',
+            });
+            records.forEach(record => {
+                const { id, productName } = record;
+                momoMapping[id] = productName;
+                setPvalue(momoMapping)
+            });
+        
+          
+
+            if(records){
+            setPav(records[0].availablePieces)
+            setVav(records[1].availablePieces)
+            setBav(records[2].availablePieces)
+            setCav(records[3].availablePieces)
+            }
+
+         
+
+        } catch (error) {
+            console.log(error)
+        }
+      }
+
        useEffect(()=>{
         viewData()
+        getProductData()
        },[])
 
 
 
     const selectedOrder = async(id)=>{
         setOid(id)
+       
        try {
-        console.log( `orderId='${id}'`)
+        
         const resultList = await pb.collection('orderItem').getList(1, 50, {
             filter: `orderId='${id}'`,
         });
+      
+       
+        const update = resultList.items.map(record => ({
+            pId: record.productId,
+            quan: record.quantity
+        }));
+        setOrderItem(update)
+       
         const totalAmount = resultList.items.reduce((acc, item) => acc + item.amount, 0);
 
         setTotal(totalAmount)
@@ -58,33 +102,11 @@ const Sales = () => {
        }
     }
 
-    const realName = {
-        "h3jn9e18t918jjw": "Chi Momo",
-        "roivwboyvm2pfje": "Veg Momo",
-        "zf8j99zl4ft79lf": "Pork Momo",
-        "305fxlc0m9o76p1": "Buff Momo"
-      };
 
-      const getProductData = async()=>{
-        try {
-            const records = await pb.collection('product').getFullList({
-                sort: '-created',
-            });
-            console.log(records)
 
-            setPav(records[2].availablePieces)
-            setVav(records[3].availablePieces)
-            setBav(records[4].availablePieces)
-            setCav(records[5].availablePieces)
+     
 
-         
 
-        } catch (error) {
-            console.log(error)
-        }
-      }
-
-      
 
       const handleSales = async(e)=>{
         e.preventDefault()
@@ -103,77 +125,64 @@ const Sales = () => {
             
             const record = await pb.collection('sales').create(data);
             getProductData()
+            adjustProduct(orderItem)
             console.log(record)
-            setOpenb(true)
+           
             
             
         } catch (error) {
             console.log(error)
         }
       }
-      const adjustProduct = async(pId,quan)=>{
-        console.log(pId,quan)
+      const adjustProduct = async (orderItems) => {
+      
         try {
-            if(pId === "zf8j99zl4ft79lf"){
-              
-                let total = pav - quan
-                console.log(total)
+            
+            for (const orderI of orderItems) {
+                const { pId, quan } = orderI;
+    
+                let initialQuantity; 
                 
-                
-                const data = {
-                    
-                    "availablePieces": total
-                };
-                const records = await pb.collection('product').update(pId, data);
-                console.log(records)
-                console.log("Pork data adjusted")
-                
-                viewData()
+                if (pId === "zf8j99zl4ft79lf") {
+                    initialQuantity = pav;
+                } else if (pId === "roivwboyvm2pfje") {
+                    initialQuantity = vav;
+                } else if (pId === "h3jn9e18t918jjw") {
+                    initialQuantity = cav;
+                } else if (pId === "305fxlc0m9o76p1") {
+                    initialQuantity = bava;
+                }
+    
+                if (initialQuantity !== undefined) {
+                    let total = initialQuantity - quan;
+    
+                    const data = {
+                        "availablePieces": total
+                    };
+    
+                    const records = await pb.collection('product').update(pId, data);
+                    console.log(`${pvalue[pId]} data adjusted`);
+                    console.log(records);
+                    viewData();
+                } else {
+                    console.log(`Invalid product ID: ${pId}`);
+                }
             }
-            if(pId === "roivwboyvm2pfje"){
-              
-                let total = vav - quan
-                
-                const data = {
-                    
-                    "availablePieces": total
-                };
-                const records = await pb.collection('product').update(pId, data);
-                console.log(records)
-                console.log("Veg Momo data adjusted")
-                viewData()
-            }
-            if(pId === "h3jn9e18t918jjw"){
-              
-                let total = cav - quan
-                
-                const data = {
-                    
-                    "availablePieces": total
-                };
-                const records = await pb.collection('product').update(pId, data);
-                console.log("Chicken Momo data adjusted")
-                console.log(records)
-                viewData()
-            }
-            if(pId === "305fxlc0m9o76p1"){
-              
-                let total = bava - quan
-                
-                const data = {
-                    
-                    "availablePieces": total
-                };
-                const records = await pb.collection('product').update(pId, data);
-                console.log("Buff Momo data adjusted")
-                console.log(records)
-                viewData()
-            }
-        } catch (error) {
-            console.log(error)
-        }
+            const data = {
+                "orderStatus": "Complete"
+            };
 
-      }
+            const records = await pb.collection('order').update(oid, data);
+            if(records){
+                console.log("Pending changed");
+                viewData()
+            }
+            
+        } catch (error) {
+            console.log(error);
+        }
+    };
+    
 
       
 
@@ -232,11 +241,11 @@ const Sales = () => {
                         {
                             valueItem.map((m)=>(
                                 <tr className=' p-5' key={m.id}>
-                                    <th>{realName[m.productId]}</th>
+                                    <th>{pvalue[m.productId]}</th>
                                     <th>{m.quantity}</th>
                                     <th>{m.price}</th>
                                     <th>{m.amount}</th>
-                                    <th><button onClick={()=>setOpen(!open)}>Add Sales Detail</button></th>
+                                    
                                 </tr>
                             ))
 
@@ -245,6 +254,7 @@ const Sales = () => {
                     </tbody>
 
                 </table>
+               <button onClick={()=>setOpen(!open)}>Add Sales Detail</button>
                     </div>
                 </div>
                 
@@ -282,25 +292,7 @@ const Sales = () => {
                         </div>
                     )
                 }
-                {
-                    openB && (
-                        
-                        <div>
-                            <h1>Adjust Quantity</h1>
-                            {
-                            valueItem.map((m)=>(
-                                <div className=' p-5 flex gap-x-4' key={m.id}>
-                                    <p>{realName[m.productId]}</p>
-                                    <p>{m.quantity}</p>
-                                    <p><button onClick={()=>adjustProduct(m.productId,m.quantity)}>Update</button></p>
-                                </div>
-                            ))
-
-                        }
-                        </div>
-                         
-                    )
-                }
+                
         
     </div>
   )
