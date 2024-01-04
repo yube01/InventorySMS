@@ -17,17 +17,14 @@ const Sales = () => {
     const[total,setTotal] =useState(0)
 
 
-    //available product detail
-
-    const[pav,setPav] = useState(0)
-    const[vav,setVav] = useState(0)
-    const[bava,setBav] = useState(0)
-    const[cav,setCav] = useState(0)
-
     const [ pvalue,setPvalue] = useState([])
 
     //order item state
-    const[orderItem,setOrderItem] = useState([])
+    const[orderItems,setOrderItem] = useState([])
+
+    const[avai,setAvai] = useState([])
+
+
 
   
     
@@ -35,7 +32,7 @@ const Sales = () => {
     const viewData = async()=>{
         pb.autoCancellation(false)
         const records = await pb.collection('order').getFullList({
-            sort: '-created',
+            sort: '-id',
         });
         
         setValue(records)
@@ -46,22 +43,32 @@ const Sales = () => {
         const momoMapping = {};
         try {
             const records = await pb.collection('product').getFullList({
-                sort: '-created',
+                sort: '-id',
             });
             records.forEach(record => {
                 const { id, productName } = record;
                 momoMapping[id] = productName;
                 setPvalue(momoMapping)
             });
-        
-          
-
             if(records){
-            setPav(records[0].availablePieces)
-            setVav(records[1].availablePieces)
-            setBav(records[2].availablePieces)
-            setCav(records[3].availablePieces)
+               
+                const newPieceStates = records.map(record => {
+                        const matchingUpdate = orderItems.find(updateRecord => updateRecord.pId === record.id);
+                
+                        if (matchingUpdate) {
+                            return {
+                                pId: matchingUpdate.pId,
+                                availablePieces: record.availablePieces
+                            };
+                            
+                        } 
+                    }).filter(Boolean);
+                    console.log(newPieceStates.sort())
+                    setAvai(newPieceStates)
+                    
+
             }
+            
 
          
 
@@ -72,7 +79,6 @@ const Sales = () => {
 
        useEffect(()=>{
         viewData()
-        getProductData()
        },[])
 
 
@@ -83,7 +89,7 @@ const Sales = () => {
        try {
         
         const resultList = await pb.collection('orderItem').getList(1, 50, {
-            filter: `orderId='${id}'`,
+            filter: `orderId='${id}'`,sort: '+id',
         });
       
        
@@ -92,11 +98,14 @@ const Sales = () => {
             quan: record.quantity
         }));
         setOrderItem(update)
+        console.log(update)
+        getProductData()
        
         const totalAmount = resultList.items.reduce((acc, item) => acc + item.amount, 0);
 
         setTotal(totalAmount)
         setValueItem(resultList.items)
+       
        } catch (error) {
         console.log(error)
        }
@@ -125,58 +134,61 @@ const Sales = () => {
             
             const record = await pb.collection('sales').create(data);
             getProductData()
-            adjustProduct(orderItem)
-            console.log(record)
-           
-            
-            
+            adjustProduct(orderItems)
         } catch (error) {
             console.log(error)
         }
       }
       const adjustProduct = async (orderItems) => {
+     
       
+     
         try {
             
-            for (const orderI of orderItems) {
+            for (let i = 0; i < orderItems.length; i++) {
+                const orderI = orderItems[i];
                 const { pId, quan } = orderI;
-    
-                let initialQuantity; 
-                
-                if (pId === "zf8j99zl4ft79lf") {
-                    initialQuantity = pav;
-                } else if (pId === "roivwboyvm2pfje") {
-                    initialQuantity = vav;
-                } else if (pId === "h3jn9e18t918jjw") {
-                    initialQuantity = cav;
-                } else if (pId === "305fxlc0m9o76p1") {
-                    initialQuantity = bava;
+               
+            
+                let initialQuantity;
+            
+                console.log(pId,avai[i]?.pId)
+              
+
+                if (pId === avai[i]?.pId) {
+                    initialQuantity = avai[i]?.availablePieces;
                 }
-    
+               
+              
+            
                 if (initialQuantity !== undefined) {
                     let total = initialQuantity - quan;
-    
+            
                     const data = {
                         "availablePieces": total
                     };
-    
+            
                     const records = await pb.collection('product').update(pId, data);
                     console.log(`${pvalue[pId]} data adjusted`);
                     console.log(records);
                     viewData();
-                } else {
-                    console.log(`Invalid product ID: ${pId}`);
+                }
+                // else {
+                //     console.log(`Invalid product ID: ${pId}`);
+                // }
+
+                const data = {
+                    "orderStatus": "Complete"
+                };
+    
+                const records = await pb.collection('order').update(oid, data);
+                if(records){
+                    console.log("Pending changed");
+                    viewData()
                 }
             }
-            const data = {
-                "orderStatus": "Complete"
-            };
-
-            const records = await pb.collection('order').update(oid, data);
-            if(records){
-                console.log("Pending changed");
-                viewData()
-            }
+            
+            
             
         } catch (error) {
             console.log(error);
@@ -254,7 +266,7 @@ const Sales = () => {
                     </tbody>
 
                 </table>
-               <button onClick={()=>setOpen(!open)}>Add Sales Detail</button>
+               <button onClick={()=>{setOpen(!open),getProductData()}}>Add Sales Detail</button>
                     </div>
                 </div>
                 
