@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import PocketBase from 'pocketbase';
 
 import NepaliDatepicker from 'nepali-datepicker-and-dateinput';
+import { Link } from 'react-router-dom';
 
 
 
@@ -21,6 +22,8 @@ const Inventory = () => {
 
     const[prod,setProd] =useState([])
     const[pvalue,setPvalue] = useState([])
+
+    // fetches data from product
     const viewData = async()=>{
         const momoMapping = {};
        try {
@@ -45,6 +48,7 @@ const Inventory = () => {
     }
 
 
+    // gets data from production table
     const viewProduction = async()=>{
         try {
             const records = await pb.collection('production').getFullList({
@@ -67,6 +71,7 @@ const Inventory = () => {
 
     },[])
 
+    // gets data from product table
     const getData = async(type)=>{
         
         
@@ -94,17 +99,15 @@ const Inventory = () => {
     
 
     const handleDateChange = (name, dateInMilli, bsDate, adDate) => {
-       
-        
-        setDate(bsDate); 
-        
- }
+       setDate(bsDate); 
+    }
    
     
 
   
 
 
+    // called when handleAdd is called from form tag
     const handleAdd = async(e)=>{
       
     
@@ -151,6 +154,9 @@ const Inventory = () => {
 
   return (
     <div className='flex gap-10 flex-col relative bg-cyan-300'>
+      <Link to="/" className="bold text-lg border-2 border-black p-0.5 rounded-lg mt-1">
+        Home
+      </Link>
        <div className=' flex gap-x-10'>
        <div>
        <h1 className=' mb-4'>Inventory Input</h1>

@@ -1,6 +1,7 @@
 import NepaliDatepicker from 'nepali-datepicker-and-dateinput';
 import PocketBase from 'pocketbase';
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 const Order = () => {
 
@@ -20,8 +21,11 @@ const Order = () => {
     const[idMap,setIdMap] = useState([])
     const[customer,setCustomer] = useState([])
     const[cid,setCid] = useState("")
+
+    const[open,setOpen] = useState(false)
    
 
+    // shows current nepali calender date 
     const handleDateChange = (name, dateInMilli, bsDate, adDate) => {
          setCurrent(bsDate)
     }
@@ -29,6 +33,7 @@ const Order = () => {
         setDue(bsDate)
    }
 
+   // fetch orderItem data 
    const viewData = async()=>{
     pb.autoCancellation(false)
     const records = await pb.collection('orderItem').getFullList({
@@ -43,7 +48,7 @@ const Order = () => {
 
 
 
-   
+   //fetches product table data 
    const viewProductData = async()=>{
     const momoMapping = {};
     try {
@@ -51,6 +56,8 @@ const Order = () => {
      const records = await pb.collection('product').getFullList({
          sort: '-created'})
         
+
+        // stores data in momoMapping as key value pair
         records.forEach(record => {
         const { id, productName } = record;
         momoMapping[id] = productName;
@@ -67,6 +74,7 @@ const Order = () => {
      
  }
 
+ // fetches taxableCustomer detail
  const customerDetail = async()=>{
     try {
         const records = await pb.collection('taxableCustomer').getFullList({
@@ -86,6 +94,7 @@ const Order = () => {
     customerDetail()
    },[])
 
+   // called when form tag is submited
     const addOrder = async(e)=>{
         e.preventDefault()
         try {
@@ -97,9 +106,13 @@ const Order = () => {
                 "orderStatus": "pending"
             };
             
+            // sends data to order table
             const record = await pb.collection('order').create(data);
             setOrder(record.id)
             console.log(record.id)
+            if(record){
+                setOpen(true)
+            }
         } catch (error) {
             console.log(error)
             
@@ -107,6 +120,7 @@ const Order = () => {
     }
     
 
+    // sends data to orderItem table
     const addOderItem = async(e)=>{
         e.preventDefault()
         let total = quantity * price
@@ -134,6 +148,9 @@ const Order = () => {
 
   return (
     <div className=' bg-cyan-300'>
+         <Link to="/" className="bold text-lg border-2 border-black p-0.5 rounded-lg mt-1">
+        Home
+      </Link>
         <h1>Insert Order</h1>
         <form onSubmit={addOrder} className=' flex gap-5 flex-col'>
           
@@ -169,7 +186,10 @@ const Order = () => {
 
             <input type="submit" className=" cursor-pointer border-black border-2" value="Add"  />
         </form>
-        <form onSubmit={addOderItem} className=' flex gap-5 flex-col'>
+        {
+            open && (
+                <>
+                <form onSubmit={addOderItem} className=' flex gap-5 flex-col'>
             
             <h1>Add Product Detail</h1>
             <div className=' flex gap-4'>
@@ -224,6 +244,9 @@ const Order = () => {
                 </table>
             </div>
        </div>
+                </>
+            )
+        }
     </div>
   )
 }

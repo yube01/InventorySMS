@@ -1,5 +1,6 @@
 import { useState } from "react"
 import PocketBase from 'pocketbase';
+import { Link } from "react-router-dom";
 
 
 const Customer = () => {
@@ -13,6 +14,7 @@ const Customer = () => {
     const[discount,setDiscount] = useState("")
     const[vno,setVno] = useState("")
 
+    // sends data to taxableCustomer table
     const addCustomer = async(e)=>{
         e.preventDefault()
 
@@ -36,7 +38,10 @@ const Customer = () => {
 
   return (
     <div className=" bg-cyan-200 w-70">
-        <h1>Add Customer Detail</h1>
+      <Link to="/" className="bold text-lg border-2 border-black p-0.5 rounded-lg mt-1">
+        Home
+      </Link>
+        <h1 className=" mt-3">Add Customer Detail</h1>
         <form onSubmit={addCustomer} className=' flex gap-5 flex-col'>
             <div>
             <label>Customer Name</label>
