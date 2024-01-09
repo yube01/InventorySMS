@@ -1,14 +1,20 @@
 import React, { useEffect, useState } from 'react'
-import PocketBase from 'pocketbase';
+import { Link } from 'react-router-dom';
 
 import NepaliDatepicker from 'nepali-datepicker-and-dateinput';
-import { Link } from 'react-router-dom';
+
+
+import { getProduct } from '../middleware/Product/getProduct';
+import { getProduction } from '../middleware/Production/getProduction';
+import { getOneProduct } from '../middleware/Product/getOneProduct';
+import { createProduction } from '../middleware/Production/createProduction';
+import { updateProduct } from '../middleware/Product/updateProduct';
 
 
 
 const Inventory = () => {
 
-    const pb = new PocketBase('https://draw-wire.pockethost.io');
+
 
 
     const [type,setType] = useState('');
@@ -25,38 +31,26 @@ const Inventory = () => {
 
     // fetches data from product
     const viewData = async()=>{
-        const momoMapping = {};
-       try {
-        pb.autoCancellation(false)
-        const records = await pb.collection('product').getFullList({
-            sort: '-created'})
-        
-            records.forEach(record => {
-                const { id, productName } = record;
-                momoMapping[id] = productName;
-                setPvalue(momoMapping)
-            });
-        
-                 
+
+        const{records,momoMapping,error} = await getProduct()
+
+        if(!error){
             setValue(records)
-        
-       } catch (error) {
-        console.log(error)
-        
-       }
+            setPvalue(momoMapping)
+         }else{
+            console.log(error)
+        }
         
     }
 
 
     // gets data from production table
     const viewProduction = async()=>{
-        try {
-            const records = await pb.collection('production').getFullList({
-                sort: '-created',
-            });
-            setProd(records)
 
-        } catch (error) {
+        const {records,error} = await getProduction()
+        if(!error){
+            setProd(records)
+         }else{
             console.log(error)
         }
     }
@@ -64,36 +58,20 @@ const Inventory = () => {
    
 
     useEffect(()=>{
-        
-       
         viewData()
         viewProduction()
-
     },[])
 
     // gets data from product table
     const getData = async(type)=>{
         
-        
-        try {
-            const record = await pb.collection('product').getOne(type, {
-                expand: 'relField1,relField2.subRelField'})
-            
-               
-                if(record){
-                    setPrev(record.availablePieces)
-                    
-                }
-
-            
-           
-        } catch (error) {
+        const {availablePieces,error} = await getOneProduct(type)
+        if(!error){
+            setPrev(availablePieces)
+         }else{
             console.log(error)
         }
-        
-
-        
-    }
+     }
 
    
     
@@ -103,48 +81,25 @@ const Inventory = () => {
     }
    
     
-
-  
-
-
     // called when handleAdd is called from form tag
     const handleAdd = async(e)=>{
       
-    
-        e.preventDefault();
+    e.preventDefault();
         try {
-            const data = {
-                "productionDate": date,
-                "productId": type,
-                "quantity": quantity,
-                "productionStaffId": "23"
-               
-            };
+            const{record,error} = await createProduction(date,type,quantity,23)
             
-            const record = await pb.collection('production').create(data);
-           
-            
-           
-            
-     
             if(record){
-              
-                let total = Number(quantity) + Number(prev)
-                
-                const data = {
-                    
-                    "availablePieces": total
-                };
-                const records = await pb.collection('product').update(type, data);
-                console.log(records)
+
+                await updateProduct(quantity,prev,type)
                 viewData()
                 viewProduction()
+            }else{
+                console.log(error)
             }
-        
-           
-            
+
         } catch (error) {
             console.log(error)
+            
             
         }
     }

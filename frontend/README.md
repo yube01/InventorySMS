@@ -11,3 +11,8 @@ testing
 
 git remote rm origin
 https://github.com/yube01/InventorySMS.git
+
+
+docker build -t my-react-app .
+
+docker run -p 5173:5173 my-react-app
